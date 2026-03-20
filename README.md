@@ -19,7 +19,7 @@ flowchart LR
 
     subgraph Services
         C[mlx_lm.server]
-        D[KoboldCPP<br/>향후 추가]
+        D[KoboldCPP]
     end
 
     A --> C
@@ -36,7 +36,7 @@ flowchart LR
     end
 
     C --> F
-    C --> G
+    D --> G
 ```
 
 ## 사용법
