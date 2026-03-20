@@ -1,0 +1,13 @@
+# PM2 로그
+logs/
+
+# 환경변수 (민감 정보 포함 가능)
+.env
+.env.local
+.env.*.local
+
+# oh-my-claudecode
+.omc/
+
+# macOS
+.DS_Store
