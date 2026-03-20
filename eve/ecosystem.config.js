@@ -1,9 +1,8 @@
 /**
- * PM2 Logrotate 설정: ./pm2-logrotate.json
- * 적용: pm2 install pm2-logrotate 후 설정값 적용
+ * PM2 설정 - eve 서버 (macOS)
  *
- * 경로: .env의 LOCAL_BIN_PATH 사용
- * 예: LOCAL_BIN_PATH=/Users/crong/.local/bin
+ * 실행: pm2 start ecosystem.config.js
+ * 로그: ../logs/qwen3-vl-4b.log
  */
 const LOCAL_BIN_PATH = '/Users/crong/.local/bin';
 
@@ -18,11 +17,10 @@ module.exports = {
         '--port 58081',
       ].join(' '),
       interpreter: 'none',
-
       log_date_format: 'YYYY-MM-DD HH:mm:ss',
       merge_logs: true,
-      error_file: './logs/qwen3-vl-4b.log',
-      out_file: './logs/qwen3-vl-4b.log',
+      error_file: '../logs/qwen3-vl-4b.log',
+      out_file: '../logs/qwen3-vl-4b.log',
       env_file: '.env',
       max_memory_restart: '8G',
       autorestart: true,

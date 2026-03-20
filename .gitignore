@@ -5,9 +5,16 @@ logs/
 .env
 .env.local
 .env.*.local
+*/.env
 
-# oh-my-claudecode
-.omc/
+# Models (large files)
+*/models/
+
+# Cache
+.cache
 
 # macOS
 .DS_Store
+
+# oh-my-claudecode
+.omc/

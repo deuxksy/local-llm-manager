@@ -1,68 +1,125 @@
-# Local LLM Manager
+# 🤖 Local LLM Manager
 
 PM2로 관리하는 Local LLM 서버 설정입니다.
 
-## 1. 아키텍처
+## 📐 1. 아키텍처
 
 ```mermaid
-flowchart LR
+flowchart TB
     subgraph PM2
-        A[ecosystem.config.js]
-        B[pm2-logrotate]
+        A[eve/ecosystem.config.js]
+        B[girl/ecosystem.config.js]
     end
 
-    subgraph Services
+    subgraph "eve (macOS)"
         C[mlx_lm.server]
-        D[KoboldCPP]
+        D[qwen3-vl-4b]
     end
 
-    A --> C
-    A --> D
-    B --> C
-    B --> D
-
-    C --> E[(logs/)]
-    D --> E
-
-    subgraph External
-        F[HuggingFace]
-        G[Local Models]
+    subgraph "girl (SteamDeck)"
+        E[KoboldCPP]
+        F[qwen3.5-4b]
+        G[models/]
     end
 
-    C --> F
-    D --> G
+    A --> C --> D
+    B --> E --> F
+    G --> E
+
+    D --> H[(logs/)]
+    F --> H
 ```
 
-## 2. 파일 구조
+## 📁 2. 파일 구조
 
 ```
 .
-├── ecosystem.config.js   # PM2 설정
-├── .env                  # 환경변수
-├── .gitignore
-├── README.md
-└── logs/                 # 로그 디렉토리
-    └── *.log
+├── eve/                        # 🍎 macOS 서버
+│   ├── ecosystem.config.js
+│   └── .env
+├── girl/                       # 🎮 SteamDeck 서버
+│   ├── ecosystem.config.js
+│   ├── .env
+│   └── models/                 # 모델 파일 (gitignore)
+├── logs/                       # 📋 공통 로그
+└── README.md
 ```
 
-## 3. 서비스
+## 🖥️ 3. 서비스
 
-| 이름 | 모델 | 포트 |
-|------|------|------|
-| qwen3-vl-4b | mlx-community/Qwen3-VL-4B-Instruct-4bit | 58081 |
+| 서버 | 이름 | 모델 | 포트 |
+|------|------|------|------|
+| 🍎 eve | qwen3-vl-4b | mlx-community/Qwen3-VL-4B-Instruct-4bit | 58081 |
+| 🎮 girl | qwen3.5-4b | Qwen3.5-4B-Q5_K_M.gguf | 58081 |
 
-## 4. 사용법
+## 🚀 4. 빠른 시작
+
+### 4-1. 저장소 클론
 
 ```bash
-pm2 start ecosystem.config.js   # 시작
-pm2 status                     # 상태 확인
-pm2 logs qwen3-vl-4b           # 로그 확인
-pm2 restart qwen3-vl-4b        # 재시작
-pm2 stop qwen3-vl-4b           # 중지
-pm2 save                       # 상태 저장 (재부팅 시 복원)
+git clone <repo-url> ~/git/local-llm-manager
+cd ~/git/local-llm-manager
 ```
 
-## 5. 로그 관리
+### 4-2. 서버별 설정
+
+**🍎 eve (macOS):**
+```bash
+cd ~/git/local-llm-manager/eve
+cp .env.example .env   # 필요시 생성
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+**🎮 girl (SteamDeck):**
+```bash
+cd ~/git/local-llm-manager/girl
+# 모델 파일이 이미 models/에 있어야 함
+pm2 start ecosystem.config.js
+pm2 save
+```
+
+### 4-3. 부팅 시 자동 시작
+
+```bash
+pm2 startup            # startup 스크립트 생성 (안내 따라 실행)
+pm2 save               # 현재 상태 저장
+```
+
+## ⌨️ 5. 자주 쓰는 명령어
+
+```bash
+# ▶️ 서비스 시작/중지/재시작
+pm2 start <service-name>
+pm2 stop <service-name>
+pm2 restart <service-name>
+
+# 📊 상태 확인
+pm2 status
+pm2 monit              # 실시간 모니터링
+
+# 📋 로그
+pm2 logs               # 전체 로그
+pm2 logs <service-name> --lines 50   # 특정 서비스 최근 50줄
+
+# 💾 저장/복원
+pm2 save               # 현재 상태 저장
+pm2 resurrect          # 저장된 상태 복원
+pm2 delete all         # 전체 삭제 (주의)
+```
+
+## 📦 6. 모델 파일 관리
+
+모델 파일은 `<server>/models/`에 위치합니다.
+
+```bash
+# girl 서버에 모델 다운로드 예시
+cd ~/git/local-llm-manager/girl/models
+# GGUF 모델 다운로드
+wget https://huggingface.co/.../Qwen3.5-4B-Q5_K_M.gguf
+```
+
+## 📋 7. 로그 관리
 
 - **위치**: `./logs/`
 - **Rotate**: 10MB 초과 시 자동 rotate, 최대 3개 파일 유지 (압축)
@@ -83,26 +140,37 @@ pm2 save                       # 상태 저장 (재부팅 시 복원)
 }
 ```
 
-## 6. 모델 추가
+## 🔧 8. 문제 해결
 
-`ecosystem.config.js`의 `apps` 배열에 새 항목을 추가합니다:
+### ❌ 서비스가 시작되지 않을 때
+```bash
+pm2 logs <service-name> --err    # 에러 로그 확인
+pm2 describe <service-name>      # 상세 정보 확인
+```
 
-```javascript
-{
-  name: 'new-model',
-  script: `${LOCAL_BIN_PATH}/mlx_lm.server`,
-  args: [
-    '--model <model-path>',
-    '--host 0.0.0.0',
-    '--port <port>',
-  ].join(' '),
-  interpreter: 'none',
-  log_date_format: 'YYYY-MM-DD HH:mm:ss',
-  merge_logs: true,
-  error_file: './logs/new-model.log',
-  out_file: './logs/new-model.log',
-  env_file: '.env',
-  max_memory_restart: '8G',
-  autorestart: true,
-},
+### 🔌 포트 충돌
+```bash
+lsof -i :58081                   # 포트 사용 확인
+```
+
+### 💾 메모리 부족
+```bash
+pm2 monit                        # 메모리 사용량 확인
+# ecosystem.config.js에서 max_memory_restart 조정
+```
+
+## ➕ 9. 새 서버 추가
+
+1. `<new-server>/` 폴더 생성
+2. `ecosystem.config.js` 작성 (기존 파일 복사 후 수정)
+3. `.env` 파일 생성 (필요시)
+4. `models/` 폴더 생성 및 모델 다운로드 (로컬 모델 사용시)
+5. PM2 시작 및 저장
+
+```bash
+mkdir -p new-server
+cp eve/ecosystem.config.js new-server/
+# 설정 파일 수정
+pm2 start new-server/ecosystem.config.js
+pm2 save
 ```
