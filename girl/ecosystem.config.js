@@ -4,13 +4,11 @@
  * 실행: pm2 start ecosystem.config.js
  * 로그: ../logs/qwen3.5-4B.log
  */
-const LOCAL_BIN_PATH = '/home/deck/.local/bin';
-
 module.exports = {
   apps: [
     {
       name: 'qwen3.5-4B',
-      script: `${LOCAL_BIN_PATH}/koboldcpp`,
+      script: '/home/deck/.local/bin/koboldcpp',
       args: [
         '--model ./models/Qwen3.5-4B-Q5_K_M.gguf',
         '--host 0.0.0.0',
